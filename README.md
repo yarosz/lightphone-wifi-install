@@ -23,9 +23,6 @@ LightOS update could change or remove it. Tested on a Light Phone III (TLP301) w
 2. In the phone's Settings > Developer, set Allowed tools to allow any Tool. Tools that aren't signed by Light
    need it: with a stricter setting, LightOS's code refuses to let them talk to LightOS, so they install but
    don't work. (That's from reading LightOS; only the "any" setting has been tried on a phone.)
-3. Add Weather or Authenticator with the (+) button at the bottom of the Tools list. LightOS downloads these
-   when you add them, and on LightOS 582 that download is what creates the Tool Inbox; until then the phone
-   refuses uploads. Tools that are already on the phone don't create it.
 
 ## Installing a Tool
 
@@ -39,6 +36,14 @@ LightOS update could change or remove it. Tested on a Light Phone III (TLP301) w
 
 One scan lasts until you press Back in the File Manager. The phone's screen can go to sleep, and you can click
 Install another to add more Tools on the same scan. The page shows whether it's still connected.
+
+## If the phone refuses the upload
+
+You may never see this. On the one phone this was tested on, the first uploads were refused with "Invalid path",
+because the folder behind the Tool Inbox didn't exist yet. Reading LightOS showed that the folder is created when
+LightOS downloads a Tool you add, so we added Weather and Authenticator with the (+) button at the bottom of the
+Tools list, and uploads worked from then on. If you hit the same refusal, try adding a Tool you don't have yet;
+Weather and Authenticator are the ones we tried.
 
 ## From a terminal
 
@@ -89,9 +94,9 @@ The installer:
 
 Quirks it works around:
 
-- The Tool Inbox is backed by a folder that only LightOS's third-party download creates
-  (`LightOSThirdPartyApkDownloadWorker`), which runs when you add a downloadable Tool such as Weather or
-  Authenticator with (+). Until then every upload fails with "Invalid path".
+- The Tool Inbox is backed by a folder that, in LightOS 582's code, only its third-party download creates
+  (`LightOSThirdPartyApkDownloadWorker`). If the folder is missing, every upload fails with "Invalid path"; see
+  [If the phone refuses the upload](#if-the-phone-refuses-the-upload).
 - Listing an empty Tool Inbox returns HTTP 500, so a 500 there doesn't mean anything is broken.
 - The server sends its certificate without the intermediate that signed it. Browsers and curl fetch the missing
   intermediate themselves; Python doesn't, so the installer fetches it from the certificate's CA Issuers address

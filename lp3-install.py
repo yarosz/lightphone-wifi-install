@@ -241,9 +241,9 @@ def install(apk, phone_url):
     status, body = phone_request(base, key, f"/api/upload/{INBOX}/{name}", "POST", apk["data"],
                                  "application/octet-stream", timeout=300)
     if not 200 <= status < 300:
-        raise Refused("The phone refused the upload. If this phone has never added Weather or Authenticator "
-                      "with the (+) button at the bottom of the Tools list, add one (that creates the Tool Inbox), "
-                      "then try again.")
+        raise Refused("The phone refused the upload. Its Tool Inbox may not exist yet: try adding a Tool you "
+                      "don't have with the (+) button at the bottom of the Tools list (Weather or Authenticator "
+                      "worked for us), then try again.")
     phone_request(base, key, f"/api/notify/{INBOX}", "POST", b"")
     for _ in range(45):
         time.sleep(2)
@@ -290,7 +290,6 @@ PAGE = r"""<!doctype html>
 <h1>LP3 Tool Installer</h1>
 <details class="dim"><summary>First time? Set up the phone once</summary><ol>
   <li>Turn on developer mode, then in Settings &gt; Developer allow external Tools.</li>
-  <li>Add Weather or Authenticator with the (+) button at the bottom of the Tools list. LightOS downloads it, and that creates the phone's Tool Inbox.</li>
 </ol></details>
 
 <section id="s1"><h2>1. Choose the Tool</h2>
