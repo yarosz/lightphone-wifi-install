@@ -24,8 +24,9 @@ LightOS update could change or remove it. Tested on a Light Phone III (TLP301) w
 2. In the phone's Settings > Developer, set Allowed tools to All tools. This is required: with No external,
    Light approved or Light signed, the phone still installs what you upload but hides it from the Tools list,
    unless Light signed it. It stays set when developer mode is off.
-3. Check that Settings shows Debug, where the File Manager is. On the phone this was tested on, Debug was there
-   after the Phone tool's code `*7412369#` had been dialed; whether every phone needs that hasn't been tested.
+3. Open the Phone tool and dial `*7412369#`. That's what makes Settings show Debug, where the File Manager is:
+   on the phone this was tested on, Debug never appeared until then. The code also opens a developer menu, where
+   nothing needs changing for Wi-Fi install.
 
 ## Installing a Tool
 

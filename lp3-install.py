@@ -289,7 +289,9 @@ PAGE = r"""<!doctype html>
 </style></head><body><main>
 <h1>LP3 Tool Installer</h1>
 <details class="dim"><summary>First time? Set up the phone once</summary><ol>
-  <li>Turn on developer mode, then in Settings &gt; Developer allow external Tools.</li>
+  <li>Turn on developer mode for your phone on Light's <a href="https://dashboard.thelightphone.com" target="_blank" rel="noopener">dashboard</a>. It only makes Settings &gt; Developer appear; you can turn it off after the next step.</li>
+  <li>On the phone, set Settings &gt; Developer &gt; Allowed tools to <b>All tools</b>. With any other setting, what you install is hidden from the Tools list.</li>
+  <li>Open the Phone tool and dial <b>*7412369#</b>. That's what makes Settings show Debug, where the File Manager is.</li>
 </ol></details>
 
 <section id="s1"><h2>1. Choose the Tool</h2>
