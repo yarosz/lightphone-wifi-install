@@ -19,10 +19,13 @@ LightOS update could change or remove it. Tested on a Light Phone III (TLP301) w
 
 ## Once, on the phone
 
-1. Turn on developer mode for your phone on Light's [user dashboard](https://dashboard.thelightphone.com).
-2. In the phone's Settings > Developer, set Allowed tools to allow any Tool. Tools that aren't signed by Light
-   need it: with a stricter setting, LightOS's code refuses to let them talk to LightOS, so they install but
-   don't work. (That's from reading LightOS; only the "any" setting has been tried on a phone.)
+1. Turn on developer mode for your phone on Light's [user dashboard](https://dashboard.thelightphone.com). It
+   only makes Settings > Developer appear, for the next step; you can turn it off again afterwards.
+2. In the phone's Settings > Developer, set Allowed tools to All tools. This is required: with No external,
+   Light approved or Light signed, the phone still installs what you upload but hides it from the Tools list,
+   unless Light signed it. It stays set when developer mode is off.
+3. Check that Settings shows Debug, where the File Manager is. On the phone this was tested on, Debug was there
+   after the Phone tool's code `*7412369#` had been dialed; whether every phone needs that hasn't been tested.
 
 ## Installing a Tool
 
@@ -70,8 +73,8 @@ check the download.
 
 ## Staying safe
 
-LightOS installs whatever reaches the Tool Inbox without asking, and with Allowed tools set to any it lists and
-opens ordinary Android apps too, not just Light Tools. So:
+LightOS installs whatever reaches the Tool Inbox without asking, whatever Allowed tools is set to, and with
+All tools it lists and opens ordinary Android apps too, not just Light Tools. So:
 
 - Only install APKs from people you trust. The page notes when an APK is an ordinary Android app rather than a
   Light Tool, but it can't tell a safe APK from a harmful one.
