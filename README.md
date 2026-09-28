@@ -14,14 +14,18 @@ LightOS update could change or remove it. Tested on a Light Phone III (TLP301) w
 - Python 3.9 or newer on the computer. macOS includes it; on Windows, install it from
   [python.org](https://www.python.org/downloads/). Nothing else: the installer uses only Python's standard
   library.
-- A camera on the computer, to read the phone's QR code. Without one, paste the address the phone shows.
+- A camera on the computer, to read the phone's QR code. The phone shows only the QR code, not its address, so
+  without a camera scan the code with a phone's camera and paste the link it opens.
 
 ## Once, on the phone
 
 1. Turn on developer mode for your phone on Light's [user dashboard](https://dashboard.thelightphone.com).
-2. In the phone's Settings > Developer, set Allowed tools to allow any Tool, so Tools not signed by Light install.
-3. Add any of Light's own Tools with the (+) button at the bottom of the Tools list. On LightOS 582 that first
-   Light Tool is what creates the Tool Inbox; until then the phone refuses uploads.
+2. In the phone's Settings > Developer, set Allowed tools to allow any Tool. Tools that aren't signed by Light
+   need it: with a stricter setting, LightOS's code refuses to let them talk to LightOS, so they install but
+   don't work. (That's from reading LightOS; only the "any" setting has been tried on a phone.)
+3. Add Weather or Authenticator with the (+) button at the bottom of the Tools list. LightOS downloads these
+   when you add them, and on LightOS 582 that download is what creates the Tool Inbox; until then the phone
+   refuses uploads. Tools that are already on the phone don't create it.
 
 ## Installing a Tool
 
@@ -30,8 +34,7 @@ LightOS update could change or remove it. Tested on a Light Phone III (TLP301) w
 2. Choose the Tool: drop its `.apk` file on the page, or paste a link to it. Add the Tool's published SHA-256 if
    it lists one.
 3. Check what the page shows: package, version, permissions and SHA-256, and whether it's a Light Tool.
-4. On the phone, open Settings > Debug > File Manager. Hold its QR code up to the computer's camera, or paste the
-   address it shows.
+4. On the phone, open Settings > Debug > File Manager. Hold its QR code up to the computer's camera.
 5. Click Install on the phone. The Tool appears in the phone's Tools list a few seconds later.
 
 One scan lasts until you press Back in the File Manager. The phone's screen can go to sleep, and you can click
@@ -86,8 +89,9 @@ The installer:
 
 Quirks it works around:
 
-- The Tool Inbox is backed by a folder that only LightOS's third-party download creates, the first time a Light
-  Tool is added with (+). Until then every upload fails with "Invalid path".
+- The Tool Inbox is backed by a folder that only LightOS's third-party download creates
+  (`LightOSThirdPartyApkDownloadWorker`), which runs when you add a downloadable Tool such as Weather or
+  Authenticator with (+). Until then every upload fails with "Invalid path".
 - Listing an empty Tool Inbox returns HTTP 500, so a 500 there doesn't mean anything is broken.
 - The server sends its certificate without the intermediate that signed it. Browsers and curl fetch the missing
   intermediate themselves; Python doesn't, so the installer fetches it from the certificate's CA Issuers address

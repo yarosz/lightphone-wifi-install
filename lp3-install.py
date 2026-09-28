@@ -241,8 +241,9 @@ def install(apk, phone_url):
     status, body = phone_request(base, key, f"/api/upload/{INBOX}/{name}", "POST", apk["data"],
                                  "application/octet-stream", timeout=300)
     if not 200 <= status < 300:
-        raise Refused("The phone refused the upload. If this phone has never added one of Light's own Tools "
-                      "with the (+) button at the bottom of the Tools list, do that once, then try again.")
+        raise Refused("The phone refused the upload. If this phone has never added Weather or Authenticator "
+                      "with the (+) button at the bottom of the Tools list, add one (that creates the Tool Inbox), "
+                      "then try again.")
     phone_request(base, key, f"/api/notify/{INBOX}", "POST", b"")
     for _ in range(45):
         time.sleep(2)
@@ -289,7 +290,7 @@ PAGE = r"""<!doctype html>
 <h1>LP3 Tool Installer</h1>
 <details class="dim"><summary>First time? Set up the phone once</summary><ol>
   <li>Turn on developer mode, then in Settings &gt; Developer allow external Tools.</li>
-  <li>Add any of Light's own Tools with the (+) button at the bottom of the Tools list. This creates the phone's Tool Inbox.</li>
+  <li>Add Weather or Authenticator with the (+) button at the bottom of the Tools list. LightOS downloads it, and that creates the phone's Tool Inbox.</li>
 </ol></details>
 
 <section id="s1"><h2>1. Choose the Tool</h2>
@@ -308,7 +309,7 @@ PAGE = r"""<!doctype html>
   <p class="dim">On the phone, open Settings &gt; Debug &gt; File Manager and keep it on screen. Hold its QR code up to this computer's camera.</p>
   <video id="v" playsinline muted class="off"></video>
   <div class="row"><button id="cam">Use the camera</button></div>
-  <div class="row"><input id="phone" type="text" placeholder="…or paste the File Manager's address"></div>
+  <div class="row"><input id="phone" type="text" placeholder="…or paste the link a phone's camera opens from that QR code"></div>
   <p id="s3msg" class="dim"></p>
   <p class="dim">The connection lasts until you press Back in the File Manager, so one scan covers any number of installs.</p>
 </section>
@@ -385,7 +386,7 @@ $("phone").oninput = () => { connected = false; if (PHONE.test($("phone").value.
 let stream = null;
 $("cam").onclick = async () => {
   try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 } } }); }
-  catch (e) { say("s3msg", "No camera: " + e.message + ". Allow camera access, or paste the address instead.", "bad"); return; }
+  catch (e) { say("s3msg", "No camera: " + e.message + ". Allow camera access, or scan the QR code with a phone's camera and paste the link it opens.", "bad"); return; }
   const v = $("v"); v.srcObject = stream; v.classList.remove("off"); v.play(); $("cam").disabled = true;
   say("s3msg", "Looking for the QR code…");
   const c = document.createElement("canvas"), g = c.getContext("2d", { willReadFrequently: true });

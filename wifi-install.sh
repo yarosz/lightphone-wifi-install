@@ -3,8 +3,8 @@
 #
 #   ./wifi-install.sh -a apk-file-or-url [-h sha256] ['<file manager url>']
 #
-# On the phone: Settings > Developer > Allowed tools = any, add one of Light's Tools with (+) once (that
-# creates the Tool Inbox folder), then open the File Manager from the debug menu and keep it on screen. The
+# On the phone: Settings > Developer > Allowed tools = any, add Weather or Authenticator with (+) once (their
+# download creates the Tool Inbox folder), then open the File Manager from the debug menu and keep it on screen. The
 # url is the one its QR code holds, https://<ip>.my.local-ip.co:54449/#<key>; the key changes every open.
 # Without a url, qr-scan.py opens a camera page in the browser and reads the QR code off the phone. With -h,
 # the APK must match that SHA-256.
@@ -67,7 +67,7 @@ echo "uploading $name ($(du -h "$apk" | awk '{print $1}'))"
 code=$(api -o "$work/upload.out" -w '%{http_code}' -X POST -H 'Content-Type: application/octet-stream' \
   --data-binary "@$apk" "$base/api/upload/$inbox/$name")
 [[ "$code" =~ ^2 ]] || { echo "upload failed, HTTP $code: $(head -c 300 "$work/upload.out")" >&2
-  echo "if this phone has never added one of Light's Tools with (+), do that once; it creates the Tool Inbox" >&2; exit 1; }
+  echo "if this phone has never added Weather or Authenticator with (+), add one; that creates the Tool Inbox" >&2; exit 1; }
 api -o /dev/null -X POST "$base/api/notify/$inbox" || true
 
 printf 'waiting for LightOS to install it'
