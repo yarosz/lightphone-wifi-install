@@ -291,7 +291,7 @@ PAGE = r"""<!doctype html>
 <details class="dim"><summary>First time? Set up the phone once</summary><ol>
   <li>Turn on developer mode for your phone on Light's <a href="https://dashboard.thelightphone.com" target="_blank" rel="noopener">dashboard</a>. It only makes Settings &gt; Developer appear; you can turn it off after the next step.</li>
   <li>On the phone, set Settings &gt; Developer &gt; Allowed tools to <b>All tools</b>. With any other setting, what you install is hidden from the Tools list.</li>
-  <li>Open the Phone tool and dial <b>*7412369#</b>. That's what makes Settings show Debug, where the File Manager is.</li>
+  <li>Open the Phone tool, dial <b>*7412369#</b> and press the call button. That makes Settings show Debug, where the File Manager is. Doing it again hides Debug; the Tools you installed stay.</li>
 </ol></details>
 
 <section id="s1"><h2>1. Choose the Tool</h2>
