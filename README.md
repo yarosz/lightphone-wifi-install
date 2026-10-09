@@ -146,7 +146,9 @@ Quirks it works around:
 
 - Tested only on one LP3 with LightOS 582, and on macOS. Windows and Linux should work but haven't been tried.
 - The installer can't see whether LightOS's install succeeded, only that it took the APK from the Tool Inbox.
-- It doesn't uninstall by itself; the companion Uninstall app does. See [Uninstalling](#uninstalling).
+- The installer can only add apps: the File Manager it uploads through accepts files but can't remove anything.
+  To remove an app installed this way, use the Uninstall app the installer offers; see
+  [Uninstalling](#uninstalling).
 - Chrome with secure DNS may fail to open the phone's own File Manager page; that doesn't affect this installer.
 
 ## Related
