@@ -8,6 +8,18 @@ This is unofficial and isn't affiliated with Light. Light documents a cable-free
 `Developer` section LightOS 582 doesn't show yet. This uses the part that does work today, the Tool Inbox, and a
 LightOS update could change or remove it. Tested on a Light Phone III (TLP301) with LightOS 582.
 
+## Light's Tool Manager
+
+Light is building an official way to do this: the
+[Tool Manager](https://github.com/lightphone/light-tool-manager), which adds a `Developer` section with
+"Upload Tools" to this same File Manager page. It runs on Light's SDK emulator, but as of October 2026 Light's guide
+says it hasn't reached LightOS production builds, and LightOS 582 doesn't have it. Once your phone's File Manager
+shows a `Developer` section, use Light's route instead of this one. This repo will be archived when that lands on
+phones.
+
+Light's Tool Library also opened to submissions in October 2026. Tools Light has signed install from Light's
+directory with no setup at all; this installer is for the ones that aren't there.
+
 ## What you need
 
 - A Light Phone III and a computer on the same Wi-Fi, with any VPN on the computer turned off.
@@ -83,6 +95,21 @@ All tools it lists and opens ordinary Android apps too, not just Light Tools. So
 - Leave the File Manager with Back when you're done. Its address works for anyone on your Wi-Fi who has it,
   until you do.
 
+## Uninstalling
+
+On LightOS 582 an app installed this way can only be removed with adb. Neither the phone's Tools list editor nor
+Light's dashboard shows sideloaded apps, and the File Manager this uses can only add files, so the installer
+can't remove them either. Light's own guide lists uninstalling as coming later.
+
+With USB debugging on and the phone connected:
+
+```
+adb uninstall <package>
+```
+
+The installer page shows each APK's package before installing it, for example `com.garado.metronome`. To list
+everything that isn't part of the phone, run `adb shell pm list packages -3`.
+
 ## How it works
 
 The phone's File Manager runs an HTTPS server on port 54449 while it's open. Its QR code holds
@@ -113,7 +140,8 @@ Quirks it works around:
 
 - Tested only on one LP3 with LightOS 582, and on macOS. Windows and Linux should work but haven't been tried.
 - The installer can't see whether LightOS's install succeeded, only that it took the APK from the Tool Inbox.
-- It doesn't uninstall. Remove a Tool on the phone as you'd remove any Tool.
+- It doesn't uninstall, and on LightOS 582 nothing on the phone can remove a sideloaded app; see
+  [Uninstalling](#uninstalling).
 - Chrome with secure DNS may fail to open the phone's own File Manager page; that doesn't affect this installer.
 
 ## Related
