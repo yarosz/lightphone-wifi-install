@@ -20,6 +20,7 @@ import hashlib
 import http.server
 import io
 import json
+import os
 import re
 import secrets
 import socket
@@ -36,6 +37,11 @@ import zipfile
 
 PORT = 54450
 MAX_APK = 200 * 1024 * 1024
+UNSIDELOADER_VERSION = "1.0.0"
+UNSIDELOADER_URL = ("https://github.com/yarosz/lightphone-wifi-install/releases/download/"
+                    "unsideloader-v1.0.0/unsideloader-1.0.0.apk")
+UNSIDELOADER_SHA256 = "01b0a7eaf967079fdcda7d88113354bc0c671413c932e90968cf7b5b3e3d5996"
+STATE_FILE = os.path.join(os.path.expanduser("~"), ".config", "lp3-install", "state.json")
 FILE_MANAGER_URL = re.compile(r"^(https://[^/#\s]+:54449)/?#([0-9a-f]{32,})$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SDK_MARKER = "com.thelightphone.sdk.ACTION_SDK_MARKER"
@@ -235,6 +241,29 @@ def connect(phone_url):
     return base, key
 
 
+def load_state():
+    try:
+        with open(STATE_FILE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def remember(key, value):
+    saved = load_state()
+    saved[key] = value
+    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
+    with open(STATE_FILE, "w") as f:
+        json.dump(saved, f, indent=1)
+
+
+def install_unsideloader(phone_url):
+    data = download(UNSIDELOADER_URL)
+    result = install(dict(inspect_apk(data, UNSIDELOADER_SHA256), data=data), phone_url)
+    remember("unsideloader", {"version": UNSIDELOADER_VERSION, "installed": time.strftime("%Y-%m-%d")})
+    return result
+
+
 def install(apk, phone_url):
     base, key = connect(phone_url)
     name = apk["package"] + ".apk"
@@ -292,6 +321,7 @@ PAGE = r"""<!doctype html>
   <li>Turn on developer mode for your phone on Light's <a href="https://dashboard.thelightphone.com" target="_blank" rel="noopener">dashboard</a>. It only makes Settings &gt; Developer appear; you can turn it off after the next step.</li>
   <li>On the phone, set Settings &gt; Developer &gt; Allowed tools to <b>All tools</b>. With any other setting, what you install is hidden from the Tools list.</li>
   <li>Open the Phone tool, dial <b>*7412369#</b> and press the call button. That makes Settings show Debug, where the File Manager is. Doing it again hides Debug; the Tools you installed stay.</li>
+  <li>To remove apps later, install the small <b>Uninstall</b> app: the installer offers it after your first install.</li>
 </ol></details>
 
 <section id="s1"><h2>1. Choose the Tool</h2>
@@ -319,6 +349,16 @@ PAGE = r"""<!doctype html>
   <div class="row"><button id="go">Install on the phone</button><button id="another" class="off">Install another</button></div>
   <p id="s4msg" class="dim"></p>
   <p id="done" class="dim off"></p>
+  <div id="rm" class="off">
+    <p><b>Removing apps later.</b> On LightOS 582, apps installed this way don't appear in the phone's Tools editor or
+      on Light's dashboard, so neither can remove them. The small Uninstall app lists them and opens Android's own
+      uninstall prompt; you confirm each one. Light's own Tools (Weather, Authenticator) aren't listed: remove those on
+      Light's dashboard.</p>
+    <div class="row"><button id="rmgo">Install the Uninstall app</button></div>
+    <p id="rmmsg" class="dim"></p>
+  </div>
+  <p id="rmagain" class="dim off">The Uninstall app was installed from this computer before.
+    <a href="#" id="rmre">Reinstall it</a></p>
 </section>
 </main>
 <script src="__JSQR__" integrity="__SRI__" crossorigin="anonymous"></script>
@@ -413,6 +453,7 @@ $("go").onclick = async () => {
     $("done").textContent = "Installed this session: " + installed.join(", ");
     $("done").classList.remove("off");
     $("go").classList.add("off"); $("another").classList.remove("off");
+    offerUninstaller();
   } catch (e) { say("s4msg", e.message, "bad"); check(); }
   $("go").disabled = false;
 };
@@ -424,6 +465,25 @@ $("another").onclick = () => {
   ready();
   $("s1").scrollIntoView({ behavior: "smooth" });
 };
+
+let uninstallerBefore = null;
+api("/api/unsideloader", "{}").then(r => { uninstallerBefore = r.installedBefore; }).catch(() => {});
+function offerUninstaller() {
+  if (uninstallerBefore) { $("rmagain").classList.remove("off"); return; }
+  $("rm").classList.remove("off");
+}
+async function installUninstaller() {
+  $("rmgo").disabled = true; $("rm").classList.remove("off"); $("rmagain").classList.add("off");
+  say("rmmsg", "Sending the Uninstall app to the phone…");
+  try {
+    await api("/api/install-unsideloader", JSON.stringify({ phone: $("phone").value.trim() }));
+    uninstallerBefore = { version: "1.0.0" };
+    say("rmmsg", "✓ Installed. Open Uninstall from the phone's Tools list whenever you want to remove an app.", "ok");
+  } catch (e) { say("rmmsg", e.message, "bad"); }
+  $("rmgo").disabled = false;
+}
+$("rmgo").onclick = installUninstaller;
+$("rmre").onclick = (e) => { e.preventDefault(); installUninstaller(); };
 
 const q = new URLSearchParams(location.search);
 if (q.get("sha256")) $("hash").value = q.get("sha256");
@@ -475,6 +535,11 @@ def make_handler(token, state, page):
                 if url.path == "/api/phone":
                     connect(str(json.loads(body or b"{}").get("phone", "")))
                     return self._send(200, {"connected": True})
+                if url.path == "/api/unsideloader":
+                    return self._send(200, {"version": UNSIDELOADER_VERSION,
+                                            "installedBefore": load_state().get("unsideloader")})
+                if url.path == "/api/install-unsideloader":
+                    return self._send(200, install_unsideloader(str(json.loads(body or b"{}").get("phone", ""))))
                 if url.path == "/api/install":
                     if not state.get("apk"):
                         raise Refused("Choose the Tool first.")

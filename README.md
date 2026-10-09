@@ -97,11 +97,17 @@ All tools it lists and opens ordinary Android apps too, not just Light Tools. So
 
 ## Uninstalling
 
-On LightOS 582 an app installed this way can only be removed with adb. Neither the phone's Tools list editor nor
-Light's dashboard shows sideloaded apps, and the File Manager this uses can only add files, so the installer
-can't remove them either. Light's own guide lists uninstalling as coming later.
+On LightOS 582, neither the phone's Tools list editor nor Light's dashboard shows apps installed this way, and
+the File Manager this uses can only add files. Light's own guide lists uninstalling as coming later.
 
-With USB debugging on and the phone connected:
+The easy way is the **Uninstall** app, in [`unsideloader/`](unsideloader). The installer offers it after your first
+install (it's a 17 KB APK from this repo's releases, pinned by SHA-256). On the phone, open Uninstall from the
+Tools list: it lists the apps nothing else can remove, and tapping one opens Android's own uninstall prompt, which
+you confirm. It can remove itself the same way. It doesn't list Light's own Tools (Weather, Authenticator,
+Rideshare): remove those on Light's dashboard, because removing them on the phone leaves the dashboard listing
+them. If the dashboard says "Request failed" when you remove Weather, reload: it worked.
+
+Or, with USB debugging on and the phone connected:
 
 ```
 adb uninstall <package>
@@ -140,8 +146,7 @@ Quirks it works around:
 
 - Tested only on one LP3 with LightOS 582, and on macOS. Windows and Linux should work but haven't been tried.
 - The installer can't see whether LightOS's install succeeded, only that it took the APK from the Tool Inbox.
-- It doesn't uninstall, and on LightOS 582 nothing on the phone can remove a sideloaded app; see
-  [Uninstalling](#uninstalling).
+- It doesn't uninstall by itself; the companion Uninstall app does. See [Uninstalling](#uninstalling).
 - Chrome with secure DNS may fail to open the phone's own File Manager page; that doesn't affect this installer.
 
 ## Related
