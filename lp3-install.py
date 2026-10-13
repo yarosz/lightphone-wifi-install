@@ -17,6 +17,7 @@ and refuses one whose SHA-256 doesn't match the published hash.
 """
 import argparse
 import hashlib
+import http.client
 import http.server
 import io
 import json
@@ -273,17 +274,18 @@ def install(apk, phone_url):
     try:
         status, body = phone_request(base, key, f"/api/upload/{INBOX}/{name}", "POST", apk["data"],
                                      "application/octet-stream", timeout=300)
-    except (urllib.error.URLError, TimeoutError, OSError):
+    except (OSError, http.client.HTTPException):
         # A phone that refuses the upload can answer early and close the connection, so a large APK fails
-        # mid-send and the refusal is never read.
-        raise Refused("The phone stopped the upload partway. " + no_inbox + " If it keeps happening, keep the "
-                      "File Manager on the phone's screen and check both are on the same Wi-Fi.")
+        # mid-send and the refusal is never read. If the phone still answers, that's what happened.
+        connect(phone_url)
+        raise Refused("The phone stopped the upload partway. " + no_inbox)
     if not 200 <= status < 300:
         raise Refused("The phone refused the upload. " + no_inbox)
     try:
         phone_request(base, key, f"/api/notify/{INBOX}", "POST", b"")
-    except (urllib.error.URLError, TimeoutError, OSError):
-        pass  # the polling below still reports whether LightOS installed it
+        notified = True
+    except (OSError, http.client.HTTPException):
+        notified = False
     for _ in range(45):
         time.sleep(2)
         try:
@@ -292,6 +294,9 @@ def install(apk, phone_url):
             continue
         if name.encode() not in listing:
             return {"installed": name, "package": apk["package"]}
+    if not notified:
+        raise Refused("The Tool reached the phone, but the phone didn't take the request to install it. Press Back "
+                      "in the File Manager, open it again, scan its new QR code and try again.")
     raise Refused("The phone has the file but hasn't installed it after 90 seconds. Check that Settings > "
                   "Developer allows external Tools.")
 
@@ -383,7 +388,7 @@ async function api(path, body, type) {
   try {
     r = await fetch(path, { method: "POST", headers: { "X-Token": TOKEN, "Content-Type": type || "application/json" }, body });
   } catch (e) {
-    throw new Error("Can't reach the installer on this computer. Check that it's still running, then reload this page.");
+    throw Object.assign(new Error("Can't reach the installer on this computer. Check that it's still running, then reload this page."), { local: true });
   }
   const out = await r.json().catch(() => ({ error: "The installer stopped responding." }));
   if (!r.ok) throw new Error(out.error || "Something went wrong.");
@@ -430,7 +435,7 @@ async function check() {
     say("s3msg", "✓ Connected to the phone since " + since.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + ".", "ok");
   } catch (e) {
     const was = connected; connected = false; since = null;
-    say("s3msg", was ? "Lost the phone: the File Manager was closed or the phone left Wi-Fi. Scan its new QR code." : e.message, "bad");
+    say("s3msg", was && !e.local ? "Lost the phone: the File Manager was closed or the phone left Wi-Fi. Scan its new QR code." : e.message, "bad");
   }
   checking = false; ready();
 }
@@ -566,7 +571,10 @@ def make_handler(token, state, page):
                 return self._send(400, {"error": "The installer got a request it couldn't read."})
             except Exception as e:
                 traceback.print_exc()
-                return self._send(500, {"error": f"Something went wrong in the installer: {e}"})
+                try:
+                    self._send(500, {"error": f"Something went wrong in the installer: {str(e) or type(e).__name__}"})
+                except OSError:
+                    pass  # the page went away
 
         def _accept(self, data, expected):
             info = inspect_apk(data, expected or None)
