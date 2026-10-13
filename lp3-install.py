@@ -29,6 +29,7 @@ import struct
 import sys
 import threading
 import time
+import traceback
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -267,13 +268,22 @@ def install_unsideloader(phone_url):
 def install(apk, phone_url):
     base, key = connect(phone_url)
     name = apk["package"] + ".apk"
-    status, body = phone_request(base, key, f"/api/upload/{INBOX}/{name}", "POST", apk["data"],
-                                 "application/octet-stream", timeout=300)
+    no_inbox = ("Its Tool Inbox may not exist yet: try adding a Tool you don't have with the (+) button at the "
+                "bottom of the Tools list (Weather or Authenticator worked for us), then try again.")
+    try:
+        status, body = phone_request(base, key, f"/api/upload/{INBOX}/{name}", "POST", apk["data"],
+                                     "application/octet-stream", timeout=300)
+    except (urllib.error.URLError, TimeoutError, OSError):
+        # A phone that refuses the upload can answer early and close the connection, so a large APK fails
+        # mid-send and the refusal is never read.
+        raise Refused("The phone stopped the upload partway. " + no_inbox + " If it keeps happening, keep the "
+                      "File Manager on the phone's screen and check both are on the same Wi-Fi.")
     if not 200 <= status < 300:
-        raise Refused("The phone refused the upload. Its Tool Inbox may not exist yet: try adding a Tool you "
-                      "don't have with the (+) button at the bottom of the Tools list (Weather or Authenticator "
-                      "worked for us), then try again.")
-    phone_request(base, key, f"/api/notify/{INBOX}", "POST", b"")
+        raise Refused("The phone refused the upload. " + no_inbox)
+    try:
+        phone_request(base, key, f"/api/notify/{INBOX}", "POST", b"")
+    except (urllib.error.URLError, TimeoutError, OSError):
+        pass  # the polling below still reports whether LightOS installed it
     for _ in range(45):
         time.sleep(2)
         try:
@@ -369,7 +379,12 @@ const $ = id => document.getElementById(id);
 let apkReady = false;
 
 async function api(path, body, type) {
-  const r = await fetch(path, { method: "POST", headers: { "X-Token": TOKEN, "Content-Type": type || "application/json" }, body });
+  let r;
+  try {
+    r = await fetch(path, { method: "POST", headers: { "X-Token": TOKEN, "Content-Type": type || "application/json" }, body });
+  } catch (e) {
+    throw new Error("Can't reach the installer on this computer. Check that it's still running, then reload this page.");
+  }
   const out = await r.json().catch(() => ({ error: "The installer stopped responding." }));
   if (!r.ok) throw new Error(out.error || "Something went wrong.");
   return out;
@@ -549,6 +564,9 @@ def make_handler(token, state, page):
                 return self._send(400, {"error": str(e)})
             except (ValueError, json.JSONDecodeError):
                 return self._send(400, {"error": "The installer got a request it couldn't read."})
+            except Exception as e:
+                traceback.print_exc()
+                return self._send(500, {"error": f"Something went wrong in the installer: {e}"})
 
         def _accept(self, data, expected):
             info = inspect_apk(data, expected or None)
