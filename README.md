@@ -59,7 +59,8 @@ You may never see this. On the one phone this was tested on, the first uploads w
 because the folder behind the Tool Inbox didn't exist yet. Reading LightOS showed that the folder is created when
 LightOS downloads a Tool you add, so we added Weather and Authenticator with the (+) button at the bottom of the
 Tools list, and uploads worked from then on. If you hit the same refusal, try adding a Tool you don't have yet;
-Weather and Authenticator are the ones we tried.
+Weather and Authenticator are the ones we tried. With a large Tool, the phone can hang up before the installer reads
+its refusal; the installer then says the phone stopped the upload partway, and the same fix applies.
 
 ## From a terminal
 
