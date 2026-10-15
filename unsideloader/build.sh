@@ -23,7 +23,9 @@ javac --release 11 -nowarn -cp "$jar" -d "$work/classes" $(find "$here/src" -nam
 "$bt/aapt2" link -o "$work/unsigned.apk" --manifest "$here/AndroidManifest.xml" -I "$jar"
 (cd "$work/dex" && zip -q "$work/unsigned.apk" classes.dex)
 "$bt/zipalign" -f 4 "$work/unsigned.apk" "$work/aligned.apk"
-"$bt/apksigner" sign --ks "$ks" --ks-key-alias unsideloader --ks-pass "pass:$pass" --out "$out" "$work/aligned.apk"
+# env: keeps the password out of argv, where ps would show it to every local user.
+UNSIDELOADER_KEYSTORE_PASS=$pass "$bt/apksigner" sign --ks "$ks" --ks-key-alias unsideloader \
+  --ks-pass env:UNSIDELOADER_KEYSTORE_PASS --out "$out" "$work/aligned.apk"
 "$bt/apksigner" verify "$out"
 echo "$out"
 shasum -a 256 "$out" | awk '{print "sha256 " $1}'
